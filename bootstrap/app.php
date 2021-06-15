@@ -75,6 +75,14 @@ $app->middleware([
     App\Http\Middleware\CorsMiddleware::class
 ]);
 
+$app->routeMiddleware([
+    'auth'       => App\Http\Middleware\AuthMiddleware::class,
+]);
+
+
+collect(scandir(__DIR__ . '/../config'))->each(function ($item) use ($app) {
+    $app->configure(basename($item, '.php'));
+});
 
 /*
 |--------------------------------------------------------------------------

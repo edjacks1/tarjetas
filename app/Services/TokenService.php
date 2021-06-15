@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Servicios;
+namespace App\Services;
 
 //Exepciones
 use Exception;
@@ -8,53 +8,40 @@ use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
 //Modelos
-use App\Models\Usuario;
+use App\Models\User;
 
 class TokenService {
 
-    private $modeloUsuario;
-    private $minutos = 60;
+    private $minutes = 60;
 
-    public function __construct(){
-        $this->modeloUsuario = new Usuario();
-    }
-
-    function generarJWT(Usuario $usuario) : string{
-        $atributos = [
+    function generateJWT(User $user) : string{
+        $payload = [
             'iss' => "lumen-jwt",                   // algo hace.
-            'sub' => $usuario,                      // Usuario.
+            'sub' => $user,                         // Usuario.
             'iat' => time(),                        // Tiempo de cuando fue creado.
-            'exp' => time() + (60 * $this->minutos) // Tiempo de expiracion.
+            'exp' => time() + (60 * $this->minutes) // Tiempo de expiracion.
         ];
-        return JWT::encode($atributos, env('JWT_SECRET'));
+        return JWT::encode($payload, env('JWT_SECRET'));
     }
     
-    function validarToken( $token, $recordarToken) : array{
+    function validateToken( $token ) : array{
         //Validar que el token no venga nulo
         if( is_null($token) ){
-            if( is_null($recordarToken) ){//Si no existe el recordar token mandar Falso
-                return [ 'estatus' => FALSE, 'mensaje' => 'Error mientras se obtenian las creedenciales del usario.' ];
-            }else{
-                return $this->modeloUsuario->obtenerUsuarioPorRecordarToken($recordarToken); //Validar que el token exista regreso Estatus = True y Data como usuario
-            }
+            return [ 'status' => FALSE, 'msg' => 'Error mientras se obtenian las creedenciales del usario.' ];
         }
-
         try {
-            $credenciales = JWT::decode($token, env('JWT_SECRET'), ['HS256']); //Decodifico el token
-            $usuario      = Usuario::find($credenciales->sub->id);
+            $credentials  = JWT::decode($token, env('JWT_SECRET'), ['HS256']); //Decodifico el token
+            $user         = User::find($credentials->sub->id);
         }catch(ExpiredException $e) {
-            if( !is_null($recordarToken) ){
-                return $this->modeloUsuario->obtenerUsuarioPorRecordarToken($recordarToken);  //Validar que el token exista regreso Estatus = True y Data como usuario
-            }
-            return ['estatus' => FALSE, 'mensaje' => 'El token ha expirado.']; //Mandar falso si no existe el recordar token cuando expira
+            return ['status' => FALSE, 'msg' => 'El token ha expirado.']; //Mandar falso si no existe el recordar token cuando expira
         } catch(Exception $e) {
-            return ['estatus' => FALSE, 'mensaje' => 'Error mientras se decodificaba el token.'];
+            return ['status' => FALSE, 'msg' => 'Error mientras se decodificaba el token.'];
         }
 
-        if( is_null($usuario) ){
-            return ['estatus' => FALSE, 'mensaje' => 'El token no coincide con ningun registro.'];
+        if( is_null($user) ){
+            return ['status' => FALSE, 'msg' => 'El token no coincide con ningun registro.'];
         }else{
-            return ['estatus' => TRUE, 'data' => $usuario];
+            return ['status' => TRUE, 'data' => $user];
         }
     }
     
