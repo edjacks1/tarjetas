@@ -14,7 +14,7 @@ class AuthController extends Controller{
             'phone_number'          => 'required',
             'first_name'            => 'required',
             'last_name'             => 'required',
-            'password'              => 'required|confirmed',
+            'password'              => 'required|min:6|confirmed',
             'email'                 => 'required|unique:users'
         ]);
         $request->merge(['password' => Hash::make($request->password)]);

@@ -9,7 +9,7 @@ class CreateUsersTable extends Migration
     public function up(){
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');
-            // $table->uuid('firebase_id');
+            $table->uuid('uuid')->unique();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('phone_number');
